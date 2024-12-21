@@ -1,9 +1,23 @@
-'use client';
-
+"use client"
 import React, { useState } from 'react';
-import { Search, RefreshCw, Plus } from 'lucide-react';
+import { Search, RefreshCw, Plus, X } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import Sidebar from '../Components/Sidebar';
 import {
   Pagination,
@@ -22,6 +36,10 @@ interface Repository {
   size: string;
   lastUpdated: string;
   isPrivate: boolean;
+  description?: string;
+  createdAt: string;
+  owner: string;
+  stars: number;
 }
 
 interface PageNumber {
@@ -32,6 +50,9 @@ interface PageNumber {
 const RepositoryList = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
+  const [selectedLanguage, setSelectedLanguage] = useState('all');
+  const [visibility, setVisibility] = useState('all');
+  const [selectedRepo, setSelectedRepo] = useState<Repository | null>(null);
   const itemsPerPage = 10;
 
   const repositories: Repository[] = Array.from({ length: 50 }, (_, index) => ({
@@ -40,13 +61,21 @@ const RepositoryList = () => {
     language: ['React', 'TypeScript', 'JavaScript', 'Python'][Math.floor(Math.random() * 4)],
     size: `${Math.floor(Math.random() * 1000)}KB`,
     lastUpdated: `${Math.floor(Math.random() * 30)} days ago`,
-    isPrivate: Math.random() > 0.5
+    isPrivate: Math.random() > 0.5,
+    description: `This is a sample repository description for Repository-${index + 1}. It contains example code and documentation.`,
+    createdAt: '2024-01-01',
+    owner: 'John Doe',
+    stars: Math.floor(Math.random() * 100)
   }));
 
-
-  const filteredRepos = repositories.filter(repo =>
-    repo.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredRepos = repositories.filter(repo => {
+    const matchesSearch = repo.name.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesLanguage = selectedLanguage === 'all' || repo.language === selectedLanguage;
+    const matchesVisibility = visibility === 'all' || 
+      (visibility === 'public' && !repo.isPrivate) || 
+      (visibility === 'private' && repo.isPrivate);
+    return matchesSearch && matchesLanguage && matchesVisibility;
+  });
 
   const totalPages = Math.ceil(filteredRepos.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
@@ -85,7 +114,12 @@ const RepositoryList = () => {
 
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(e.target.value);
-    setCurrentPage(1); 
+    setCurrentPage(1);
+  };
+
+  const clearFilters = () => {
+    setSelectedLanguage('all');
+    setVisibility('all');
   };
 
   return (
@@ -93,6 +127,7 @@ const RepositoryList = () => {
       <Sidebar />
       <div className="md:pl-64 w-full">
         <div className="p-4 md:p-6 max-w-7xl mx-auto">
+          {/* Header Section */}
           <div className="mb-8">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
               <h1 className="text-2xl font-semibold">Repositories</h1>
@@ -107,27 +142,71 @@ const RepositoryList = () => {
                 </Button>
               </div>
             </div>
+
+            {/* Search and Filters Section */}
             <div className="flex flex-col gap-4">
               <div className="text-sm text-gray-600">
-                Total repositories: {repositories.length}
+                Total repositories: {filteredRepos.length}
               </div>
               
-              <div className="w-full max-w-[366px]">
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
-                    <Search className="h-4 w-4 text-gray-400" />
+              <div className="flex flex-wrap gap-4 items-start">
+                <div className="w-full max-w-[366px]">
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
+                      <Search className="h-4 w-4 text-gray-400" />
+                    </div>
+                    <Input
+                      type="text"
+                      placeholder="Search repositories..."
+                      value={searchQuery}
+                      onChange={handleSearch}
+                      className="pl-10 pr-4 h-[44px] w-full"
+                    />
                   </div>
-                  <Input
-                    type="text"
-                    placeholder="Search repositories..."
-                    value={searchQuery}
-                    onChange={handleSearch}
-                    className="pl-10 pr-4 h-[44px] w-full"
-                  />
+                </div>
+                
+                <div className="flex gap-2 flex-wrap">
+                  <Select value={selectedLanguage} onValueChange={setSelectedLanguage}>
+                    <SelectTrigger className="w-[150px]">
+                      <SelectValue placeholder="Language" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Languages</SelectItem>
+                      <SelectItem value="React">React</SelectItem>
+                      <SelectItem value="TypeScript">TypeScript</SelectItem>
+                      <SelectItem value="JavaScript">JavaScript</SelectItem>
+                      <SelectItem value="Python">Python</SelectItem>
+                    </SelectContent>
+                  </Select>
+
+                  <Select value={visibility} onValueChange={setVisibility}>
+                    <SelectTrigger className="w-[150px]">
+                      <SelectValue placeholder="Visibility" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All</SelectItem>
+                      <SelectItem value="public">Public</SelectItem>
+                      <SelectItem value="private">Private</SelectItem>
+                    </SelectContent>
+                  </Select>
+
+                  {(selectedLanguage !== 'all' || visibility !== 'all') && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={clearFilters}
+                      className="text-gray-500"
+                    >
+                      <X className="h-4 w-4 mr-1" />
+                      Clear filters
+                    </Button>
+                  )}
                 </div>
               </div>
             </div>
           </div>
+
+          {/* Repository List */}
           <div className="space-y-4 mb-6 border rounded-lg bg-white overflow-hidden">
             {paginatedRepos.length > 0 ? (
               paginatedRepos.map((repo) => (
@@ -155,9 +234,64 @@ const RepositoryList = () => {
                       </div>
                     </div>
                     <div className="flex items-center gap-2 w-full sm:w-auto">
-                      <Button variant="outline" size="sm" className="w-full sm:w-auto">
-                        View Details
-                      </Button>
+                      <Sheet>
+                        <SheetTrigger asChild>
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            className="w-full sm:w-auto"
+                            onClick={() => setSelectedRepo(repo)}
+                          >
+                            View Details
+                          </Button>
+                        </SheetTrigger>
+                        <SheetContent className="w-[400px] sm:w-[540px]">
+                          <SheetHeader>
+                            <SheetTitle>{selectedRepo?.name}</SheetTitle>
+                            <SheetDescription>
+                              Repository Details
+                            </SheetDescription>
+                          </SheetHeader>
+                          <div className="mt-6 space-y-6">
+                            <div>
+                              <h4 className="text-sm font-medium mb-2">Description</h4>
+                              <p className="text-sm text-gray-600">{selectedRepo?.description}</p>
+                            </div>
+                            <div className="grid grid-cols-2 gap-4">
+                              <div>
+                                <h4 className="text-sm font-medium mb-2">Owner</h4>
+                                <p className="text-sm text-gray-600">{selectedRepo?.owner}</p>
+                              </div>
+                              <div>
+                                <h4 className="text-sm font-medium mb-2">Language</h4>
+                                <p className="text-sm text-gray-600">{selectedRepo?.language}</p>
+                              </div>
+                              <div>
+                                <h4 className="text-sm font-medium mb-2">Created</h4>
+                                <p className="text-sm text-gray-600">{selectedRepo?.createdAt}</p>
+                              </div>
+                              <div>
+                                <h4 className="text-sm font-medium mb-2">Last Updated</h4>
+                                <p className="text-sm text-gray-600">{selectedRepo?.lastUpdated}</p>
+                              </div>
+                              <div>
+                                <h4 className="text-sm font-medium mb-2">Size</h4>
+                                <p className="text-sm text-gray-600">{selectedRepo?.size}</p>
+                              </div>
+                              <div>
+                                <h4 className="text-sm font-medium mb-2">Stars</h4>
+                                <p className="text-sm text-gray-600">{selectedRepo?.stars}</p>
+                              </div>
+                              <div>
+                                <h4 className="text-sm font-medium mb-2">Visibility</h4>
+                                <p className="text-sm text-gray-600">
+                                  {selectedRepo?.isPrivate ? 'Private' : 'Public'}
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        </SheetContent>
+                      </Sheet>
                     </div>
                   </div>
                 </div>
@@ -168,6 +302,8 @@ const RepositoryList = () => {
               </div>
             )}
           </div>
+
+          {/* Pagination */}
           {filteredRepos.length > itemsPerPage && (
             <div className="overflow-x-auto">
               <Pagination>
