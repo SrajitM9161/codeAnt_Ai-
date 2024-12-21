@@ -171,6 +171,19 @@ const Sidebar: React.FC<SidebarProps> = ({ className = "" }) => {
         <SheetContent side="top" className="w-full h-[50vh] pt-6">
           <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
           
+          <div className="px-4 mb-4">
+            <Link href="/" className="flex items-center space-x-2">
+              <Image
+                src="/codelogo.png"
+                alt="CodeAnt AI"
+                width={32}
+                height={32}
+                className="rounded-lg"
+              />
+              <span className="font-bold text-xl italic">CodeAnt AI</span>
+            </Link>
+          </div>
+          
           <div className="px-4 mb-6">
             <SearchWithDropdown />
           </div>
