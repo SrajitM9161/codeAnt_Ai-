@@ -127,7 +127,6 @@ const RepositoryList = () => {
       <Sidebar />
       <div className="md:pl-64 w-full">
         <div className="p-4 md:p-6 max-w-7xl mx-auto">
-          {/* Header Section */}
           <div className="mb-8">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
               <h1 className="text-2xl font-semibold">Repositories</h1>
@@ -142,8 +141,6 @@ const RepositoryList = () => {
                 </Button>
               </div>
             </div>
-
-            {/* Search and Filters Section */}
             <div className="flex flex-col gap-4">
               <div className="text-sm text-gray-600">
                 Total repositories: {filteredRepos.length}
@@ -205,8 +202,6 @@ const RepositoryList = () => {
               </div>
             </div>
           </div>
-
-          {/* Repository List */}
           <div className="space-y-4 mb-6 border rounded-lg bg-white overflow-hidden">
             {paginatedRepos.length > 0 ? (
               paginatedRepos.map((repo) => (
